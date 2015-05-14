@@ -61,7 +61,7 @@
     }).addTo(map);
 
 
-    // control that shows state info on hover
+    // control that shows area info on hover
     var info = L.control();
 
     info.onAdd = function (map) {
@@ -73,10 +73,14 @@
     info.update = function (feature) {
       this._div.innerHTML = '<h4>Area Name</h4>' +  (feature ?
         JSON.stringify(feature.properties)
-        : 'Hover over a state');
+        : 'Hover over an area');
 
       if (feature) {
-        $('#js-json-display').html(JSON.stringify(feature))
+        var features = '';
+        selectedLayers.forEach(function(layer) {
+          features += JSON.stringify(feature);
+        });
+        $('#js-json-display').html(features)
       }
     };
 
@@ -104,6 +108,33 @@
         fillOpacity: 0.7,
         fillColor: getColor(feature.properties.density)
       };
+    }
+
+    var selectedLayers = [];
+
+    function toggleSelect(e) {
+      var layer = e.target;
+
+      if (layer.selected) {
+        layer.selected = false;
+        return resetHighlight(e);
+      }
+
+      selectedLayers.push(layer);
+
+      layer.selected = true;
+
+      layer.setStyle({
+        fillColor: 'blue',
+        dashArray: '',
+        fillOpacity: 0.7
+      });
+
+      if (!L.Browser.ie && !L.Browser.opera) {
+        layer.bringToFront();
+      }
+
+      info.update(layer.feature);
     }
 
     function highlightFeature(e) {
@@ -137,8 +168,8 @@
     function onEachFeature(feature, layer) {
       layer.on({
         mouseover: highlightFeature,
-        mouseout: resetHighlight,
-        click: zoomToFeature
+        mouseout: function(e) { return e.target.selected ? e : resetHighlight(e) },
+        click: toggleSelect
       });
     }
 
