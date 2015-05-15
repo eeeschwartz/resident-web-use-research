@@ -82,48 +82,17 @@
     };
 
     function displayOutputGeom() {
-      // var coordinates = []
-      // selectedLayers.forEach(function(layer) {
-      //   coordinates.push(layer.feature.geometry.coordinates);
-      // });
-      // var feature = { type: 'Feature', properties: {}, geometry: {type: 'MultiPolygon', coordinates: coordinates }};
-      var polygons = {
-        "type": "FeatureCollection",
-        "features": [
-          {
-            "type": "Feature",
-            "properties": {
-              "fill": "#0f0"
-            },
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [[
-                [9.994812, 53.549487],
-                [10.046997, 53.598209],
-                [10.117721, 53.531737],
-                [9.994812, 53.549487]
-              ]]
-            }
-          }, {
-            "type": "Feature",
-            "properties": {
-              "fill": "#00f"
-            },
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [[
-                [10.000991, 53.50418],
-                [10.03807, 53.562539],
-                [9.926834, 53.551731],
-                [10.000991, 53.50418]
-              ]]
-            }
-          }
-        ]
-      };
+      var features = []
+      selectedLayers.forEach(function(layer) {
+        features.push(layer.feature);
+      });
 
-      var merged = turf.merge(polygons);
-
+      var merged;
+      try {
+        merged = turf.merge({ "type": "FeatureCollection", "features": features });
+      } catch(e) {
+        merged = 'error in turf.merge: ' + e.message;
+      }
       $('#js-json-display').html(JSON.stringify(merged));
     }
 
