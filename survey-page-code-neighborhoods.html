@@ -78,7 +78,7 @@
       if (feature) {
         var features = '';
         selectedLayers.forEach(function(layer) {
-          features += JSON.stringify(feature);
+          features += layer.feature.properties['NAME']
         });
         $('#js-json-display').html(features)
       }
@@ -112,14 +112,19 @@
 
     var selectedLayers = [];
 
-    function toggleSelect(e) {
-      var layer = e.target;
+    function unselect(e, layer) {
+      layer.selected = false;
+      var newDude = []
+      selectedLayers.forEach(function(selected) {
+        if (layer !== selected) {
+          newDude.push(selected);
+        }
+      });
+      selectedLayers = newDude;
+      resetHighlight(e);
+    }
 
-      if (layer.selected) {
-        layer.selected = false;
-        return resetHighlight(e);
-      }
-
+    function select(e, layer) {
       selectedLayers.push(layer);
 
       layer.selected = true;
@@ -133,7 +138,11 @@
       if (!L.Browser.ie && !L.Browser.opera) {
         layer.bringToFront();
       }
+    }
 
+    function toggleSelect(e) {
+      var layer = e.target;
+      layer.selected ? unselect(e, layer) : select(e, layer);
       info.update(layer.feature);
     }
 
