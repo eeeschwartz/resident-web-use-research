@@ -98,14 +98,14 @@
       $('#js-json-display textarea').val(JSON.stringify(merged));
     }
 
-    function style(feature) {
+    function style(feature, fillColor) {
       return {
         weight: 2,
         opacity: 1,
         color: 'white',
         dashArray: '3',
         fillOpacity: 0.7,
-        fillColor: 'green'
+        fillColor: fillColor
       };
     }
 
@@ -182,19 +182,27 @@
     }
 
     var zillowGroup = new L.LayerGroup();
-    $.getJSON("zillow-neighborhoods.geojson", function(data) {
+    $.getJSON("data/zillow-neighborhoods.geojson", function(data) {
       geojson = L.geoJson(data, {
-        style: style,
+        style: function(feature) { return style(feature, 'red') },
         onEachFeature: onEachFeature
       }).addTo(zillowGroup);
     })
 
     var associationsGroup = new L.LayerGroup();
-    $.getJSON("neighborhood-associations.geojson", function(data) {
+    $.getJSON("data/neighborhood-associations.geojson", function(data) {
       geojson = L.geoJson(data, {
-        style: style,
+        style: function(feature) { return style(feature, 'green') },
         onEachFeature: onEachFeature
       }).addTo(associationsGroup);
+    })
+
+    var councilGroup = new L.LayerGroup();
+    $.getJSON("data/council.geojson", function(data) {
+      geojson = L.geoJson(data, {
+        style: function(feature) { return style(feature, 'yellow') },
+        onEachFeature: onEachFeature
+      }).addTo(councilGroup);
     })
 
     var baseMaps = [];
@@ -204,7 +212,8 @@
       expanded : true,
       layers    : {
         "Neighborhood Associations" : associationsGroup,
-        "Zillow Neighborhoods" : zillowGroup
+        "Zillow Neighborhoods" : zillowGroup,
+        "Council Districts" : councilGroup
       }
     },
     ];
