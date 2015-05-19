@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="css/leaflet.css" />
+  <link rel="stylesheet" href="css/StyledLayerControl.css" />
 
   <style>
     #map {
@@ -46,6 +47,7 @@
   <div id="js-json-display"></div>
 
   <script src="leaflet.js"></script>
+  <script src="StyledLayerControl.js"></script>
   <script src="turf.min.js"></script>
 
   <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
@@ -181,12 +183,45 @@
       });
     }
 
+    var zillowGroup = new L.LayerGroup();
     $.getJSON("zillow-neighborhoods.geojson", function(data) {
       geojson = L.geoJson(data, {
         style: style,
         onEachFeature: onEachFeature
-      }).addTo(map);
+      }).addTo(zillowGroup);
     })
+
+    var associationsGroup = new L.LayerGroup();
+    $.getJSON("neighborhood-associations.geojson", function(data) {
+      geojson = L.geoJson(data, {
+        style: style,
+        onEachFeature: onEachFeature
+      }).addTo(associationsGroup);
+    })
+
+    var baseMaps = [];
+
+    var overlays = [{
+      groupName : "Datasets",
+      expanded : true,
+      layers    : {
+        "Neighborhood Associations" : associationsGroup,
+        "Zillow Neighborhoods" : zillowGroup
+      }
+    },
+    ];
+
+
+    var options = {
+      container_width   : "300px",
+      group_maxHeight     : "80px",
+      //container_maxHeight : "350px",
+      exclusive         : false
+    };
+
+    var control = L.Control.styledLayerControl(baseMaps, overlays, options);
+    map.addControl(control);
+
   </script>
 </body>
 </html>
