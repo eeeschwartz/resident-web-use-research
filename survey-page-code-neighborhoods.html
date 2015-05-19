@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="css/leaflet.css" />
-  <link rel="stylesheet" href="css/StyledLayerControl.css" />
+  <link rel="stylesheet" href="css/styledLayerControl.css" />
 
   <style>
     #map {
@@ -47,7 +47,7 @@
   <div id="js-json-display"><textarea rows="10" cols="200"></textarea></div>
 
   <script src="leaflet.js"></script>
-  <script src="StyledLayerControl.js"></script>
+  <script src="styledLayerControl.js"></script>
   <script src="turf.min.js"></script>
 
   <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
@@ -111,7 +111,7 @@
 
     var selectedLayers = [];
 
-    function unselect(e, layer) {
+    function unselect(e, layer, getGeoJson) {
       layer.selected = false;
       var newDude = []
       selectedLayers.forEach(function(selected) {
@@ -120,7 +120,7 @@
         }
       });
       selectedLayers = newDude;
-      resetHighlight(e);
+      resetHighlight(e, getGeoJson);
     }
 
     function select(e, layer) {
@@ -139,9 +139,9 @@
       }
     }
 
-    function toggleSelect(e) {
+    function toggleSelect(e, getGeoJson) {
       var layer = e.target;
-      layer.selected ? unselect(e, layer) : select(e, layer);
+      layer.selected ? unselect(e, layer, getGeoJson) : select(e, layer);
       info.update(layer.feature);
     }
 
@@ -162,48 +162,39 @@
       info.update(layer.feature);
     }
 
-    var geojson;
-
-    function resetHighlight(e) {
-      geojson.resetStyle(e.target);
-      info.update();
-    }
-
     function zoomToFeature(e) {
       map.fitBounds(e.target.getBounds());
     }
 
-    function onEachFeature(feature, layer) {
+    function resetHighlight(e, getGeoJson) {
+      getGeoJson().resetStyle(e.target);
+      info.update();
+    }
+    function onEachFeature(feature, layer, getGeoJson) {
       layer.on({
         mouseover: highlightFeature,
-        mouseout: function(e) { return e.target.selected ? e : resetHighlight(e) },
-        click: toggleSelect
+        mouseout: function(e) { return e.target.selected ? e : resetHighlight(e, getGeoJson) },
+        click: function(e) { toggleSelect(e, getGeoJson) }
       });
     }
 
-    var zillowGroup = new L.LayerGroup();
-    $.getJSON("data/zillow-neighborhoods.geojson", function(data) {
-      geojson = L.geoJson(data, {
-        style: function(feature) { return style(feature, 'red') },
-        onEachFeature: onEachFeature
-      }).addTo(zillowGroup);
-    })
+    function createGroup(dataUrl, fillColor) {
+      var group = new L.LayerGroup();
+      $.getJSON(dataUrl, function(data) {
+        var geojson;
+        function getGeoJson() { return geojson };
 
-    var associationsGroup = new L.LayerGroup();
-    $.getJSON("data/neighborhood-associations.geojson", function(data) {
-      geojson = L.geoJson(data, {
-        style: function(feature) { return style(feature, 'green') },
-        onEachFeature: onEachFeature
-      }).addTo(associationsGroup);
-    })
+        geojson = L.geoJson(data, {
+          style: function(feature) { return style(feature, fillColor) },
+          onEachFeature: function(f, l) { onEachFeature(f, l, getGeoJson); }
+        }).addTo(group);
+      });
+      return group;
+    }
 
-    var councilGroup = new L.LayerGroup();
-    $.getJSON("data/council.geojson", function(data) {
-      geojson = L.geoJson(data, {
-        style: function(feature) { return style(feature, 'yellow') },
-        onEachFeature: onEachFeature
-      }).addTo(councilGroup);
-    })
+    var zillowGroup = createGroup( "data/zillow-neighborhoods.geojson", "red");
+    var associationsGroup = createGroup("data/neighborhood-associations.geojson", "green")
+    var councilGroup = createGroup("data/council.geojson", "yellow")
 
     var baseMaps = [];
 
